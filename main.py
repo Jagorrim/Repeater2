@@ -69,7 +69,6 @@ class Repeater(DBSide, VKSide, nextcord.Client):
                             'Пишите мне о багах, недочётах и предложениях по улучшению, мой дс - Jagorrim.',
                             'Возможны перебои в работе бота из-за отсутствия постоянного хоста.']
         self.conn = None
-        self.timeout = 60 * 5  # Время, которое нужно ждать между после каждого обхода вк групп (5 минут)
         self.length_limit = 2000  # Ограничение по длине символов в сообщении в дискорде
 
     def start_bot(self, token: str) -> None:
@@ -87,24 +86,26 @@ class Repeater(DBSide, VKSide, nextcord.Client):
                 start = time.time()
                 async with aiohttp.ClientSession() as session:
                     groups = self.get_all_groups(self.conn)
-                    for group in groups:
-                        latest_post = await self.get_latest_post(group.vk_group_id, session)
+                    try:
+                        for group in groups:
+                            latest_post = await self.get_latest_post(group.vk_group_id, session)
 
-                        # Если текущий id последнего поста меньше либо равен зафиксированному id последнего поста,
-                        # то следует пропустить данную группу,
-                        # т.к. в группе либо удалили пост, либо ничего нового не появилось.
-                        if latest_post.post_id <= group.last_post_id:
-                            continue
+                            # Если текущий id последнего поста меньше либо равен зафиксированному id последнего поста,
+                            # то следует пропустить данную группу,
+                            # т.к. в группе либо удалили пост, либо ничего нового не появилось.
+                            if latest_post.post_id <= group.last_post_id:
+                                continue
 
-                        # Обновляем последний id у подписки, т.к. у неё вышел новый пост
-                        self.update_group(self.conn, group.vk_group_id, 'last_post_id', latest_post.post_id)
-                        for subscription in self.get_ss_by_group(self.conn, group.vk_group_id):
-                            await self.send_post(subscription, group, latest_post)
+                            # Обновляем последний id у подписки, т.к. у неё вышел новый пост
+                            self.update_group(self.conn, group.vk_group_id, 'last_post_id', latest_post.post_id)
+                            for subscription in self.get_ss_by_group(self.conn, group.vk_group_id):
+                                    await self.send_post(subscription, group, latest_post)
+                    except Exception as e:
+                        print(f'Ошибка при обходе сообщества {group}', e)
                 print(time.time() - start)
-
-                await asyncio.sleep(self.timeout)  # Ждём некоторое время чтобы потом снова вернуться
             except Exception as e:
                 print(f'Ошибка в обходе сообществ: {e}')
+            await asyncio.sleep(config.timeout)  # Ждём некоторое время чтобы потом снова вернуться
 
     async def send_post(self, subscription: SubscriptionData, group: GroupData, post: PostData):
         try:
@@ -234,8 +235,8 @@ class Repeater(DBSide, VKSide, nextcord.Client):
                 system_group_url = f'https://vk.com/{group_type}{vk_group_id}'
 
                 last_post_id = (
-                    await self.get_latest_post(vk_group_id, session, get_photos=False, get_videos=False)
-                ).post_id
+                    await self.get_latest_post(vk_group_id, session,
+                                               get_photos=False, get_videos=False, only_get_last_post_id=True)).post_id
 
                 self.add_group(self.conn, vk_group_id, vk_group_name, system_group_url, last_post_id=last_post_id)
 
