@@ -8,3 +8,4 @@ client_id = '<your ds client id>'
 vk_api_version = 5.199
 
 access_token = '<your vk access token>'
+timeout = 15 # 60 * 5  # Время, которое нужно ждать между после каждого обхода вк групп (5 минут)
