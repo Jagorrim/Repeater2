@@ -1,9 +1,8 @@
 import time
 
 import asyncio
-import addition
 import config
-from addition import BotException, PostData, parse_hyperlinks
+from addition import BotException, PostData, parse_hyperlinks, ImageToDiscord
 import aiohttp
 
 from pprint import pprint
@@ -35,7 +34,7 @@ class VKSide:
     async def get_latest_post(
             owner_id: int,
             session: aiohttp.ClientSession,
-            get_photos: bool = True, get_videos: bool = True
+            get_photos: bool = True, get_videos: bool = True, only_get_last_post_id: bool = False
     ) -> PostData:
         owner_id = -abs(owner_id)
 
@@ -67,9 +66,15 @@ class VKSide:
         elif len(post['items']) == 1:
             index = 0
         else:
+            if only_get_last_post_id:
+                return PostData(post_id=-1)
+
             raise Exception('В группе нет постов (строка 63)')
 
-        answer = addition.PostData()
+        if only_get_last_post_id:
+            return PostData(post_id=post['items'][index]['id'])
+
+        answer = PostData()
 
         answer.text = parse_hyperlinks(post['items'][index]['text'])
         answer.group_id = post['items'][0]['owner_id']
@@ -103,7 +108,7 @@ class VKSide:
                 async with session.get(url=url_image, ssl=False) as response:
                     image = await response.content.read()  # Сама фотография, собственно
                 filename = url_image.split('/')[-1].split('?')[0]
-                res = addition.ImageToDiscord(image, filename)
+                res = ImageToDiscord(image, filename)
 
                 answer.photos.append(res)
 
