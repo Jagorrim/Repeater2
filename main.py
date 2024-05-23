@@ -99,7 +99,7 @@ class Repeater(DBSide, VKSide, nextcord.Client):
                             # Обновляем последний id у подписки, т.к. у неё вышел новый пост
                             self.update_group(self.conn, group.vk_group_id, 'last_post_id', latest_post.post_id)
                             for subscription in self.get_ss_by_group(self.conn, group.vk_group_id):
-                                    await self.send_post(subscription, group, latest_post)
+                                await self.send_post(subscription, group, latest_post)
                     except Exception as e:
                         print(f'Ошибка при обходе сообщества {group}', e)
                 print(time.time() - start)

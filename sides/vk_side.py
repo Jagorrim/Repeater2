@@ -56,8 +56,9 @@ class VKSide:
         else:
             raise Exception('Что-то не так (строка 54)')
 
-        # От поста берутся только текст и фото, потому что я не знаю, как взять видео
         # Проверка на количество постов. Если постов 0, то, в некоторых случаях, дальнейшее действие останавливается.
+        # index - переменная с индексом нужного нам поста (последнего).
+        # Последний пост определяется по id, если постов нет, то последний id = -1
         if len(post['items']) == 2:
             if post['items'][0]['id'] > post['items'][1]['id']:
                 index = 0
@@ -90,10 +91,12 @@ class VKSide:
         if 'copy_history' in post['items'][index]:
             len_copy = len(post['items'][index]['copy_history'])
             for repost_index in range(len_copy):
+                # Нужно обязательно переделать гиперссылки вк в дискордовый вид
                 answer.reposted_text[repost_index + 1] = \
                     parse_hyperlinks(
                         post['items'][index]['copy_history'][repost_index]['text']
                     )
+
                 if 'attachments' in post['items'][index]['copy_history'][repost_index]:
                     media += post['items'][index]['copy_history'][repost_index]['attachments'].copy()
 
@@ -107,7 +110,7 @@ class VKSide:
 
                 async with session.get(url=url_image, ssl=False) as response:
                     image = await response.content.read()  # Сама фотография, собственно
-                filename = url_image.split('/')[-1].split('?')[0]
+                filename = url_image.split('/')[-1].split('?')[0]  # Названия файла (id фото из вк)
                 res = ImageToDiscord(image, filename)
 
                 answer.photos.append(res)
