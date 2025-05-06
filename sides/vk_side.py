@@ -29,7 +29,7 @@ class VKSide:
         except KeyError:
             raise Exception('Сбой в API VK')
 
-    # Функция для получения последнего поста сообщества. Использует request
+    # Функция для получения последнего поста сообщества
     @staticmethod
     async def get_latest_post(
             owner_id: int,
