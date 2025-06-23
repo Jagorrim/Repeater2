@@ -188,11 +188,3 @@ if __name__ == '__main__':
             result = await asyncio.gather(*tasks)
         for res in result:
             print(res.group_name)
-
-    # print('id group---', VKSide().get_group_id('https://vk.com/hoi4nw'))
-    # print('name---', VKSide().get_group_name(-218675277))
-    # start = time.time()
-    a = time.time()
-    asyncio.run(main([-218675277, -169099825, -170023851, -173306991]))
-    print(time.time() - a)
-    # print(time.time() - start)
